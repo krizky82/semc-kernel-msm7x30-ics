@@ -146,6 +146,8 @@
 #endif
 #include <linux/battery_chargalg.h>
 
+#include <linux/wl12xx.h>
+
 #define BQ24185_GPIO_IRQ		(31)
 #define CYPRESS_TOUCH_GPIO_RESET	(40)
 #define CYPRESS_TOUCH_GPIO_IRQ		(42)
@@ -231,6 +233,12 @@
 #define PM_GPIO_IRDA_TX2    21
 #define PM_GPIO_IRDA_TX3    22
 #endif
+
+#define WL12XX_IRQ 275 //147+128
+#define WL12XX_GPIO 57
+
+#define ICDK_BOARD_REF_CLK 26000000
+#define NCDK_BOARD_REF_CLK 38400000
 
 /* Platform specific HW-ID GPIO mask */
 static const u8 hw_id_gpios[] = {150, 149, 148, 43};
@@ -4399,19 +4407,17 @@ static uint32_t wifi_power(struct device *dv, unsigned int vdd)
 	int rc = 0;
 	rc = msm_sdcc_setup_power(dv,vdd);
 	if (vdd)
-		gpio_set_value(57, 1);
+		gpio_set_value(WL12XX_GPIO, 1);
 	else
-		gpio_set_value(57, 0);
+		gpio_set_value(WL12XX_GPIO, 0);
 
 	return rc;
 }
 
-#define WL12XX_IRQ 147
-#define WL12XX_GPIO 57
-
-#define ICDK_BOARD_REF_CLK 26000000
-#define NCDK_BOARD_REF_CLK 38400000
-
+struct wl12xx_platform_data mogami_wlan_data __initdata = {
+	.irq = WL12XX_IRQ,
+	.board_ref_clock = 0, //19mhz in .ini
+};
 
 
 static unsigned int msm7x30_sdcc_slot_status(struct device *dev)
@@ -4587,7 +4593,8 @@ static void __init msm7x30_init(void)
 #ifdef CONFIG_BT
 	bluetooth_power(0);
 #endif
-
+	wl12xx_set_platform_data(&mogami_wlan_data);
+	
 	msm_fb_add_devices();
 	msm_pm_set_platform_data(msm_pm_data, ARRAY_SIZE(msm_pm_data));
 	msm_device_i2c_init();
