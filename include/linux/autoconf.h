@@ -1,7 +1,7 @@
 /*
  * Automatically generated C config: don't edit
  * Linux kernel version: 2.6.32.9
- * Sat Dec  3 12:25:22 2011
+ * Sun Dec  4 16:20:35 2011
  */
 #define AUTOCONF_INCLUDED
 #define CONFIG_VIDEO_V4L1_COMPAT 1
@@ -78,6 +78,7 @@
 #define CONFIG_RCU_FANOUT 32
 #define CONFIG_QUP_EXCLUSIVE_TO_CAMERA 1
 #define CONFIG_BLK_DEV 1
+#define CONFIG_SPI_MASTER 1
 #define CONFIG_SURF_FFA_GPIO_KEYPAD 1
 #define CONFIG_HAS_IOPORT 1
 #define CONFIG_NF_CONNTRACK_IPV4 1
@@ -147,6 +148,7 @@
 #define CONFIG_NET_KEY 1
 #define CONFIG_RD_GZIP 1
 #define CONFIG_MMC_MSM_SDC2_SUPPORT 1
+#define CONFIG_SND_SPI 1
 #define CONFIG_PPPOPNS 1
 #define CONFIG_INET 1
 #define CONFIG_NEON 1
@@ -703,6 +705,7 @@
 #define CONFIG_USB_GADGET_DUALSPEED 1
 #define CONFIG_WAKELOCK_STAT 1
 #define CONFIG_VFP 1
+#define CONFIG_SPI 1
 #define CONFIG_NLS 1
 #define CONFIG_UIO 1
 #define CONFIG_CRYPTO_ALGAPI 1

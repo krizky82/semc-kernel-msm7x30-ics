@@ -1232,14 +1232,13 @@ void mmc_stop_host(struct mmc_host *host)
 	mmc_power_off(host);
 }
 
-int mmc_power_save_host(struct mmc_host *host)
+void mmc_power_save_host(struct mmc_host *host)
 {
-	int ret = 0;
 	mmc_bus_get(host);
 
 	if (!host->bus_ops || host->bus_dead || !host->bus_ops->power_restore) {
 		mmc_bus_put(host);
-		return EINVAL;
+		return;
 	}
 
 	if (host->bus_ops->power_save)
@@ -1248,27 +1247,23 @@ int mmc_power_save_host(struct mmc_host *host)
 	mmc_bus_put(host);
 
 	mmc_power_off(host);
-	return ret;
 }
 EXPORT_SYMBOL(mmc_power_save_host);
 
-int mmc_power_restore_host(struct mmc_host *host)
+void mmc_power_restore_host(struct mmc_host *host)
 {
-	int ret;
 	mmc_bus_get(host);
 
 	if (!host->bus_ops || host->bus_dead || !host->bus_ops->power_restore) {
 		mmc_bus_put(host);
-		return -EINVAL;
+		return;
 	}
 
 	mmc_power_up(host);
 	host->bus_ops->power_restore(host);
-	
-	mmc_bus_put(host);
-	return ret;
-}
 
+	mmc_bus_put(host);
+}
 EXPORT_SYMBOL(mmc_power_restore_host);
 
 int mmc_card_awake(struct mmc_host *host)

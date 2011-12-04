@@ -4593,7 +4593,8 @@ static void __init msm7x30_init(void)
 #ifdef CONFIG_BT
 	bluetooth_power(0);
 #endif
-	wl12xx_set_platform_data(&mogami_wlan_data);
+	if (wl12xx_set_platform_data(&mogami_wlan_data))
+	    printk("Can not load Wlan platform data") ;
 	
 	msm_fb_add_devices();
 	msm_pm_set_platform_data(msm_pm_data, ARRAY_SIZE(msm_pm_data));
