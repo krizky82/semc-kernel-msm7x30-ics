@@ -69,6 +69,10 @@
 #include <asm/mach/flash.h>
 #include "devices.h"
 #include "timer.h"
+
+#include <linux/usb/android.h>
+#include <mach/usbdiag.h>
+
 #include "socinfo.h"
 #include "cpufreq.h"
 #include "board-semc_mogami-keypad.h"
@@ -1629,6 +1633,18 @@ static struct platform_device msm_device_adspdec = {
 	.id = -1,
 	.dev = {
 		.platform_data = &msm_device_adspdec_database},
+};
+
+static struct android_usb_platform_data android_usb_pdata = {
+//	.update_pid_and_serial_num = usb_diag_update_pid_and_serial_num,
+};
+
+static struct platform_device android_usb_device = {
+	.name	= "android_usb",
+	.id		= -1,
+	.dev		= {
+		.platform_data = &android_usb_pdata,
+	},
 };
 
 static int novatek_reset(void)
@@ -3663,6 +3679,7 @@ static struct platform_device *devices[] __initdata = {
 	&msm_device_nand,
 	&msm_device_otg,
 	&msm_device_gadget_peripheral,
+	&android_usb_device,
 	&qsd_device_spi,
 	&msm_device_ssbi6,
 	&msm_device_ssbi7,
