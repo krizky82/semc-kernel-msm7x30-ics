@@ -1812,7 +1812,7 @@ static int msmsdcc_pm_suspend(struct device *dev)
 	if (mmc) {
 		struct msmsdcc_host *host = mmc_priv(mmc);
 
-		if (!(mmc->pm_flags && MMC_PM_KEEP_POWER))
+		if (!(mmc->pm_flags & MMC_PM_KEEP_POWER))
 			rc = mmc_suspend_host(mmc, PMSG_SUSPEND);
 		if (host->plat->status_irq)
 			disable_irq(host->plat->status_irq);
@@ -1850,8 +1850,9 @@ static int msmsdcc_pm_resume(struct device *dev)
 
 		spin_unlock_irqrestore(&host->lock, flags);
 
-		if (!(mmc->pm_flags && MMC_PM_KEEP_POWER))
+		if (!(mmc->pm_flags & MMC_PM_KEEP_POWER))
 			mmc_resume_host(mmc);
+
 		if (host->plat->status_irq)
 			enable_irq(host->plat->status_irq);
 	}

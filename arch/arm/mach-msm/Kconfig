@@ -1470,12 +1470,6 @@ config SEMC_MOGAMI_IRDA
 	help
 	  This enables the Mogami IrDA support.
 
-config WL12XX_PLATFORM_DATA
-	bool "Enable wl12xx platform data"
-	default y
-	help
-	  This enables WL12XX_PLATFORM_DATA for new mac80211 dirver.
-
 config MOGAMI_PMIC_KEYPAD
 	bool "Enable Mogami pmic gpio keypad support"
 	depends on ARCH_MSM7X30
