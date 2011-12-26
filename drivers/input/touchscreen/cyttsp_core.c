@@ -153,7 +153,7 @@
 
 #define CYTTSP_SCAN_PERIOD          20
 #define CYTTSP_BL_READY_TIME        30
-#define CYTTSP_ENTER_BLDR_TIME      6000
+#define CYTTSP_ENTER_BLDR_TIME      10000
 #define CYTTSP_BL_ENTER_TIME        100
 #define CY_LOUNCH_APP_TIME          400
 
@@ -607,8 +607,8 @@ void handle_single_touch(struct cyttsp_xydata *xy, struct cyttsp_track_data *t,
 	if (t->cur_st_tch[CY_ST_FNGR1_IDX] < CY_NUM_TRK_ID) {
 		input_report_abs(ts->input, ABS_X, t->st_x1);
 		input_report_abs(ts->input, ABS_Y, t->st_y1);
-		input_report_abs(ts->input, ABS_PRESSURE, t->st_z1);
-		input_report_key(ts->input, BTN_TOUCH, CY_TCH);
+		input_report_abs(ts->input, ABS_PRESSURE, 255);
+		input_report_key(ts->input, BTN_TOUCH, 1);
 		input_report_abs(ts->input, ABS_TOOL_WIDTH, t->tool_width);
 
 		DBG(printk(KERN_INFO"%s:ST->F1:%3d X:%3d Y:%3d Z:%3d\n",
@@ -627,8 +627,8 @@ void handle_single_touch(struct cyttsp_xydata *xy, struct cyttsp_track_data *t,
 			input_report_key(ts->input, BTN_2, CY_NTCH);
 		}
 	} else {
-		input_report_abs(ts->input, ABS_PRESSURE, CY_NTCH);
-		input_report_key(ts->input, BTN_TOUCH, CY_NTCH);
+		input_report_abs(ts->input, ABS_PRESSURE, 0);
+		input_report_key(ts->input, BTN_TOUCH, 0);
 		input_report_key(ts->input, BTN_2, CY_NTCH);
 	}
 	/* update platform data for the current single touch info */
@@ -655,6 +655,8 @@ void handle_multi_touch(struct cyttsp_track_data *t, struct cyttsp *ts)
 
 		input_report_abs(ts->input, ABS_MT_TRACKING_ID, id);
 		input_report_abs(ts->input, ABS_MT_TOUCH_MAJOR, CY_NTCH);
+                input_report_abs(ts->input, ABS_PRESSURE, 0);
+                input_report_key(ts->input, BTN_TOUCH, 0);          
 		input_report_abs(ts->input, ABS_MT_WIDTH_MAJOR, t->tool_width);
 		input_report_abs(ts->input, ABS_MT_POSITION_X,
 					ts->prv_mt_pos[id][CY_XPOS]);
@@ -675,14 +677,24 @@ void handle_multi_touch(struct cyttsp_track_data *t, struct cyttsp *ts)
 						t->cur_mt_tch[id]);
 		input_report_abs(ts->input, ABS_MT_TOUCH_MAJOR,
 						t->cur_mt_z[id]);
-		input_report_abs(ts->input, ABS_MT_WIDTH_MAJOR,
+		//fix ide
+		if (t->cur_mt_tch[id] >= CY_NUM_TRK_ID) {
+		input_report_abs(ts->input, ABS_PRESSURE, 0);
+		input_report_key(ts->input, BTN_TOUCH, 0);
+	}
+		else {
+		 input_report_abs(ts->input, ABS_PRESSURE, 255);
+		 input_report_key(ts->input, BTN_TOUCH, 1);
+	}
+		
+        input_report_abs(ts->input, ABS_MT_WIDTH_MAJOR,
 						t->tool_width);
-		input_report_abs(ts->input, ABS_MT_POSITION_X,
+	input_report_abs(ts->input, ABS_MT_POSITION_X,
 						t->cur_mt_pos[id][CY_XPOS]);
-		input_report_abs(ts->input, ABS_MT_POSITION_Y,
+	input_report_abs(ts->input, ABS_MT_POSITION_Y,
 						t->cur_mt_pos[id][CY_YPOS]);
-		if (mt_sync_func)
-			mt_sync_func(ts->input);
+	        if (mt_sync_func)
+		    mt_sync_func(ts->input);
 
 		ts->act_trk[id] = CY_TCH;
 		ts->prv_mt_pos[id][CY_XPOS] = t->cur_mt_pos[id][CY_XPOS];
@@ -786,6 +798,8 @@ no_track_id:
 					t->cur_mt_z[t->snd_trk[id]]);
 			input_report_abs(ts->input, ABS_MT_WIDTH_MAJOR,
 					t->tool_width);
+			input_report_abs(ts->input, ABS_PRESSURE, 255);
+                        input_report_key(ts->input, BTN_TOUCH, 1);
 			input_report_abs(ts->input, ABS_MT_POSITION_X,
 					t->cur_mt_pos[t->snd_trk[id]][CY_XPOS]);
 			input_report_abs(ts->input, ABS_MT_POSITION_Y,
@@ -804,6 +818,8 @@ no_track_id:
 			/* void out this touch */
 			input_report_abs(ts->input, ABS_MT_TOUCH_MAJOR,
 							CY_NTCH);
+			input_report_abs(ts->input, ABS_PRESSURE, 0);
+                        input_report_key(ts->input, BTN_TOUCH, 0);
 			input_report_abs(ts->input, ABS_MT_WIDTH_MAJOR,
 							t->tool_width);
 			input_report_abs(ts->input, ABS_MT_POSITION_X,
@@ -1379,6 +1395,7 @@ success:
 	atomic_set(&ts->mode, MODE_SYSINFO);
 	dev_info(ts->pdev, "%s: mode entered.\n", __func__);
 	msleep(CYTTSP_SCAN_PERIOD);
+	cyttsp_handshake(ts);
 	rc = ttsp_read_block_data(ts, CY_REG_BASE,
 				sizeof(ts->sysinfo_data), &(ts->sysinfo_data));
 	dev_info(ts->pdev, "%s: SI2:tts_ver=0x%02X%02X app_id=0x%02X%02X "
@@ -1737,7 +1754,7 @@ static void cyttsp_ts_early_suspend(struct early_suspend *h)
 	LOCK(ts->mutex);
 	ts->suspended = 1;
 	if (!ts->fw_loader_mode) {
-		disable_irq_nosync(ts->irq);
+		disable_irq(ts->irq);
 		dev_dbg(ts->pdev, "%s: stop ESD check\n", __func__);
 		cancel_delayed_work_sync(&ts->work);
 		cyttsp_suspend(ts);
@@ -2085,6 +2102,9 @@ void *cyttsp_core_init(struct cyttsp_bus_ops *bus_ops, struct device *pdev)
 				     ts->platform_data->maxy, 0, 0);
 		input_set_abs_params(input_device, ABS_MT_TOUCH_MAJOR, 0,
 				     CY_MAXZ, 0, 0);
+		
+                input_set_abs_params(input_device, ABS_PRESSURE, 0, 255, 0, 0);
+        
 		input_set_abs_params(input_device, ABS_MT_WIDTH_MAJOR, 0,
 				     CY_LARGE_TOOL_WIDTH, 0, 0);
 		if (ts->platform_data->use_trk_id)
@@ -2183,4 +2203,3 @@ void cyttsp_core_release(void *handle)
 MODULE_LICENSE("GPL");
 MODULE_DESCRIPTION("Cypress TrueTouch(R) Standard touchscreen driver core");
 MODULE_AUTHOR("Cypress");
-
